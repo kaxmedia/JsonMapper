@@ -47,4 +47,11 @@ interface JsonMapperInterface
      *  @return array<int, T>
      */
     public function mapArrayFromString(string $json, $object): array;
+
+    /**
+     * @template T of object
+     * @psalm-param class-string<T> $object
+     * @return T
+     */
+    public function mapToObjectOfClassString(\stdClass $json, string $class);
 }

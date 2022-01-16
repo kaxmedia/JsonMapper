@@ -157,6 +157,19 @@ class JsonMapper implements JsonMapperInterface
         return $results;
     }
 
+
+    public function mapToObjectOfClassString(\stdClass $json, string $class)
+    {
+        if (! \class_exists($class)) {
+            throw new \Exception(); // @todo proper exception message
+        }
+
+        $propertyMap = new PropertyMap();
+
+        $handler = $this->resolve();
+        return $handler($json, new ObjectWrapper(null, $class), $propertyMap, $this);
+    }
+
     /** @return \stdClass|\stdClass[] */
     private function decodeJsonString(string $json)
     {

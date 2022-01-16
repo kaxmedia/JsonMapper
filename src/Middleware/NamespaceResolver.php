@@ -6,6 +6,7 @@ namespace JsonMapper\Middleware;
 
 use JsonMapper\Cache\NullCache;
 use JsonMapper\Enums\ScalarType;
+use JsonMapper\Helpers\NamespaceHelper;
 use JsonMapper\Helpers\UseStatementHelper;
 use JsonMapper\JsonMapperInterface;
 use JsonMapper\Parser\Import;
@@ -63,33 +64,9 @@ class NamespaceResolver extends AbstractMiddleware
     /** @param Import[] $imports */
     private function resolveSingleType(PropertyType $type, ObjectWrapper $object, array $imports): PropertyType
     {
-        if (ScalarType::isValid($type->getType())) {
-            return $type;
-        }
-
-        $matches = \array_filter(
-            $imports,
-            static function (Import $import) use ($type) {
-                $nameSpacedType = "\\{$type->getType()}";
-                if ($import->hasAlias() && $import->getAlias() === $type->getType()) {
-                    return true;
-                }
-
-                return $nameSpacedType === \substr($import->getImport(), -strlen($nameSpacedType));
-            }
+        return new PropertyType(
+            NamespaceHelper::resolveNamespace($type->getType(), $object->getReflectedObject()->getNamespaceName(), $imports),
+            $type->isArray()
         );
-
-        if (count($matches) > 0) {
-            return new PropertyType(\array_shift($matches)->getImport(), $type->isArray());
-        }
-
-        if (class_exists($object->getReflectedObject()->getNamespaceName() . '\\' . $type->getType())) {
-            return new PropertyType(
-                $object->getReflectedObject()->getNamespaceName() . '\\' . $type->getType(),
-                $type->isArray()
-            );
-        }
-
-        return $type;
     }
 }

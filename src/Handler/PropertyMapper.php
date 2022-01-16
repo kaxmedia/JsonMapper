@@ -52,6 +52,12 @@ class PropertyMapper
         PropertyMap $propertyMap,
         JsonMapperInterface $mapper
     ): void {
+        // If the type we are mapping has a last minute factory use it.
+        if ($this->classFactoryRegistry->hasFactory($object->getName())) {
+            $result =  $this->classFactoryRegistry->create($object->getName(), $json);
+            return;
+        }
+
         $values = (array) $json;
         foreach ($values as $key => $value) {
             if (! $propertyMap->hasProperty($key)) {
@@ -289,6 +295,10 @@ class PropertyMapper
         $reflectionType = new \ReflectionClass($type);
         if (!$reflectionType->isInstantiable()) {
             return $this->resolveUnInstantiableType($type, $value, $mapper);
+        }
+
+        if ($reflectionType->getConstructor()->getNumberOfParameters() > 0) {
+            return $mapper->mapToObjectOfClassString($value, $type);
         }
 
         $instance = new $type();
